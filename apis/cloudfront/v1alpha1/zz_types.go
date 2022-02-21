@@ -119,17 +119,21 @@ type CacheBehavior struct {
 	// A complex type that specifies how CloudFront handles query strings, cookies,
 	// and HTTP headers.
 	ForwardedValues *ForwardedValues `json:"forwardedValues,omitempty"`
-	// A complex type that specifies a list of Lambda functions associations for
-	// a cache behavior.
+	// A list of CloudFront functions that are associated with a cache behavior
+	// in a CloudFront distribution. CloudFront functions must be published to the
+	// LIVE stage to associate them with a cache behavior.
+	FunctionAssociations *FunctionAssociations `json:"functionAssociations,omitempty"`
+	// A complex type that specifies a list of Lambda@Edge functions associations
+	// for a cache behavior.
 	//
-	// If you want to invoke one or more Lambda functions triggered by requests
+	// If you want to invoke one or more Lambda@Edge functions triggered by requests
 	// that match the PathPattern of the cache behavior, specify the applicable
 	// values for Quantity and Items. Note that there can be up to 4 LambdaFunctionAssociation
 	// items in this list (one for each possible value of EventType) and each EventType
-	// can be associated with the Lambda function only once.
+	// can be associated with only one function.
 	//
-	// If you don't want to invoke any Lambda functions for the requests that match
-	// PathPattern, specify 0 for Quantity and omit Items.
+	// If you don't want to invoke any Lambda@Edge functions for the requests that
+	// match PathPattern, specify 0 for Quantity and omit Items.
 	LambdaFunctionAssociations *LambdaFunctionAssociations `json:"lambdaFunctionAssociations,omitempty"`
 
 	MaxTTL *int64 `json:"maxTTL,omitempty"`
@@ -142,14 +146,16 @@ type CacheBehavior struct {
 
 	RealtimeLogConfigARN *string `json:"realtimeLogConfigARN,omitempty"`
 
+	ResponseHeadersPolicyID *string `json:"responseHeadersPolicyID,omitempty"`
+
 	SmoothStreaming *bool `json:"smoothStreaming,omitempty"`
 
 	TargetOriginID *string `json:"targetOriginID,omitempty"`
 	// A list of key groups whose public keys CloudFront can use to verify the signatures
 	// of signed URLs and signed cookies.
 	TrustedKeyGroups *TrustedKeyGroups `json:"trustedKeyGroups,omitempty"`
-	// A list of AWS accounts whose public keys CloudFront can use to verify the
-	// signatures of signed URLs and signed cookies.
+	// A list of Amazon Web Services accounts whose public keys CloudFront can use
+	// to verify the signatures of signed URLs and signed cookies.
 	TrustedSigners *TrustedSigners `json:"trustedSigners,omitempty"`
 
 	ViewerProtocolPolicy *string `json:"viewerProtocolPolicy,omitempty"`
@@ -277,6 +283,24 @@ type CachedMethods struct {
 }
 
 // +kubebuilder:skipversion
+type ConflictingAlias struct {
+	AccountID *string `json:"accountID,omitempty"`
+
+	Alias *string `json:"alias,omitempty"`
+
+	DistributionID *string `json:"distributionID,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ConflictingAliasesList struct {
+	MaxItems *int64 `json:"maxItems,omitempty"`
+
+	NextMarker *string `json:"nextMarker,omitempty"`
+
+	Quantity *int64 `json:"quantity,omitempty"`
+}
+
+// +kubebuilder:skipversion
 type ContentTypeProfile struct {
 	ContentType *string `json:"contentType,omitempty"`
 
@@ -389,17 +413,21 @@ type DefaultCacheBehavior struct {
 	// A complex type that specifies how CloudFront handles query strings, cookies,
 	// and HTTP headers.
 	ForwardedValues *ForwardedValues `json:"forwardedValues,omitempty"`
-	// A complex type that specifies a list of Lambda functions associations for
-	// a cache behavior.
+	// A list of CloudFront functions that are associated with a cache behavior
+	// in a CloudFront distribution. CloudFront functions must be published to the
+	// LIVE stage to associate them with a cache behavior.
+	FunctionAssociations *FunctionAssociations `json:"functionAssociations,omitempty"`
+	// A complex type that specifies a list of Lambda@Edge functions associations
+	// for a cache behavior.
 	//
-	// If you want to invoke one or more Lambda functions triggered by requests
+	// If you want to invoke one or more Lambda@Edge functions triggered by requests
 	// that match the PathPattern of the cache behavior, specify the applicable
 	// values for Quantity and Items. Note that there can be up to 4 LambdaFunctionAssociation
 	// items in this list (one for each possible value of EventType) and each EventType
-	// can be associated with the Lambda function only once.
+	// can be associated with only one function.
 	//
-	// If you don't want to invoke any Lambda functions for the requests that match
-	// PathPattern, specify 0 for Quantity and omit Items.
+	// If you don't want to invoke any Lambda@Edge functions for the requests that
+	// match PathPattern, specify 0 for Quantity and omit Items.
 	LambdaFunctionAssociations *LambdaFunctionAssociations `json:"lambdaFunctionAssociations,omitempty"`
 
 	MaxTTL *int64 `json:"maxTTL,omitempty"`
@@ -410,14 +438,16 @@ type DefaultCacheBehavior struct {
 
 	RealtimeLogConfigARN *string `json:"realtimeLogConfigARN,omitempty"`
 
+	ResponseHeadersPolicyID *string `json:"responseHeadersPolicyID,omitempty"`
+
 	SmoothStreaming *bool `json:"smoothStreaming,omitempty"`
 
 	TargetOriginID *string `json:"targetOriginID,omitempty"`
 	// A list of key groups whose public keys CloudFront can use to verify the signatures
 	// of signed URLs and signed cookies.
 	TrustedKeyGroups *TrustedKeyGroups `json:"trustedKeyGroups,omitempty"`
-	// A list of AWS accounts whose public keys CloudFront can use to verify the
-	// signatures of signed URLs and signed cookies.
+	// A list of Amazon Web Services accounts whose public keys CloudFront can use
+	// to verify the signatures of signed URLs and signed cookies.
 	TrustedSigners *TrustedSigners `json:"trustedSigners,omitempty"`
 
 	ViewerProtocolPolicy *string `json:"viewerProtocolPolicy,omitempty"`
@@ -493,9 +523,8 @@ type DistributionConfig struct {
 	//    (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValues-security-policy)
 	//    in the Amazon CloudFront Developer Guide.
 	//
-	//    * The location of the SSL/TLS certificate, AWS Certificate Manager (ACM)
-	//    (https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html) (recommended)
-	//    or AWS Identity and Access Management (AWS IAM) (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_server-certs.html).
+	//    * The location of the SSL/TLS certificate, Certificate Manager (ACM) (https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html)
+	//    (recommended) or Identity and Access Management (IAM) (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_server-certs.html).
 	//    You specify the location by setting a value in one of the following fields
 	//    (not both): ACMCertificateArn IAMCertificateId
 	//
@@ -623,9 +652,8 @@ type DistributionSummary struct {
 	//    (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValues-security-policy)
 	//    in the Amazon CloudFront Developer Guide.
 	//
-	//    * The location of the SSL/TLS certificate, AWS Certificate Manager (ACM)
-	//    (https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html) (recommended)
-	//    or AWS Identity and Access Management (AWS IAM) (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_server-certs.html).
+	//    * The location of the SSL/TLS certificate, Certificate Manager (ACM) (https://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html)
+	//    (recommended) or Identity and Access Management (IAM) (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_server-certs.html).
 	//    You specify the location by setting a value in one of the following fields
 	//    (not both): ACMCertificateArn IAMCertificateId
 	//
@@ -648,9 +676,9 @@ type Distribution_SDK struct {
 	// A list of key groups, and the public keys in each key group, that CloudFront
 	// can use to verify the signatures of signed URLs and signed cookies.
 	ActiveTrustedKeyGroups *ActiveTrustedKeyGroups `json:"activeTrustedKeyGroups,omitempty"`
-	// A list of AWS accounts and the active CloudFront key pairs in each account
-	// that CloudFront can use to verify the signatures of signed URLs and signed
-	// cookies.
+	// A list of Amazon Web Services accounts and the active CloudFront key pairs
+	// in each account that CloudFront can use to verify the signatures of signed
+	// URLs and signed cookies.
 	ActiveTrustedSigners *ActiveTrustedSigners `json:"activeTrustedSigners,omitempty"`
 
 	AliasICPRecordals []*AliasICPRecordal `json:"aliasICPRecordals,omitempty"`
@@ -790,6 +818,48 @@ type ForwardedValues struct {
 	// A complex type that contains information about the query string parameters
 	// that you want CloudFront to use for caching for a cache behavior.
 	QueryStringCacheKeys *QueryStringCacheKeys `json:"queryStringCacheKeys,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type FunctionAssociation struct {
+	EventType *string `json:"eventType,omitempty"`
+
+	FunctionARN *string `json:"functionARN,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type FunctionAssociations struct {
+	Items []*FunctionAssociation `json:"items,omitempty"`
+
+	Quantity *int64 `json:"quantity,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type FunctionConfig struct {
+	Comment *string `json:"comment,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type FunctionList struct {
+	MaxItems *int64 `json:"maxItems,omitempty"`
+
+	NextMarker *string `json:"nextMarker,omitempty"`
+
+	Quantity *int64 `json:"quantity,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type FunctionMetadata struct {
+	CreatedTime *metav1.Time `json:"createdTime,omitempty"`
+
+	FunctionARN *string `json:"functionARN,omitempty"`
+
+	LastModifiedTime *metav1.Time `json:"lastModifiedTime,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type FunctionSummary struct {
+	Status *string `json:"status,omitempty"`
 }
 
 // +kubebuilder:skipversion
@@ -1209,6 +1279,116 @@ type RealtimeLogConfigs struct {
 }
 
 // +kubebuilder:skipversion
+type ResponseHeadersPolicy struct {
+	ID *string `json:"id,omitempty"`
+
+	LastModifiedTime *metav1.Time `json:"lastModifiedTime,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyAccessControlAllowHeaders struct {
+	Quantity *int64 `json:"quantity,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyAccessControlAllowMethods struct {
+	Quantity *int64 `json:"quantity,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyAccessControlAllowOrigins struct {
+	Quantity *int64 `json:"quantity,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyAccessControlExposeHeaders struct {
+	Quantity *int64 `json:"quantity,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyCORSConfig struct {
+	AccessControlAllowCredentials *bool `json:"accessControlAllowCredentials,omitempty"`
+
+	AccessControlMaxAgeSec *int64 `json:"accessControlMaxAgeSec,omitempty"`
+
+	OriginOverride *bool `json:"originOverride,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyConfig struct {
+	Comment *string `json:"comment,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyContentSecurityPolicy struct {
+	ContentSecurityPolicy *string `json:"contentSecurityPolicy,omitempty"`
+
+	Override *bool `json:"override,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyContentTypeOptions struct {
+	Override *bool `json:"override,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyCustomHeader struct {
+	Header *string `json:"header,omitempty"`
+
+	Override *bool `json:"override,omitempty"`
+
+	Value *string `json:"value,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyCustomHeadersConfig struct {
+	Quantity *int64 `json:"quantity,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyFrameOptions struct {
+	Override *bool `json:"override,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyList struct {
+	MaxItems *int64 `json:"maxItems,omitempty"`
+
+	NextMarker *string `json:"nextMarker,omitempty"`
+
+	Quantity *int64 `json:"quantity,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyReferrerPolicy struct {
+	Override *bool `json:"override,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyStrictTransportSecurity struct {
+	AccessControlMaxAgeSec *int64 `json:"accessControlMaxAgeSec,omitempty"`
+
+	IncludeSubdomains *bool `json:"includeSubdomains,omitempty"`
+
+	Override *bool `json:"override,omitempty"`
+
+	Preload *bool `json:"preload,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type ResponseHeadersPolicyXSSProtection struct {
+	ModeBlock *bool `json:"modeBlock,omitempty"`
+
+	Override *bool `json:"override,omitempty"`
+
+	Protection *bool `json:"protection,omitempty"`
+
+	ReportURI *string `json:"reportURI,omitempty"`
+}
+
+// +kubebuilder:skipversion
 type Restrictions struct {
 	// A complex type that controls the countries in which your content is distributed.
 	// CloudFront determines the location of your users using MaxMind GeoIP databases.
@@ -1245,9 +1425,9 @@ type StatusCodes struct {
 // +kubebuilder:skipversion
 type StreamingDistribution struct {
 	ARN *string `json:"arn,omitempty"`
-	// A list of AWS accounts and the active CloudFront key pairs in each account
-	// that CloudFront can use to verify the signatures of signed URLs and signed
-	// cookies.
+	// A list of Amazon Web Services accounts and the active CloudFront key pairs
+	// in each account that CloudFront can use to verify the signatures of signed
+	// URLs and signed cookies.
 	ActiveTrustedSigners *ActiveTrustedSigners `json:"activeTrustedSigners,omitempty"`
 
 	DomainName *string `json:"domainName,omitempty"`
@@ -1272,8 +1452,8 @@ type StreamingDistributionConfig struct {
 	Enabled *bool `json:"enabled,omitempty"`
 
 	PriceClass *string `json:"priceClass,omitempty"`
-	// A list of AWS accounts whose public keys CloudFront can use to verify the
-	// signatures of signed URLs and signed cookies.
+	// A list of Amazon Web Services accounts whose public keys CloudFront can use
+	// to verify the signatures of signed URLs and signed cookies.
 	TrustedSigners *TrustedSigners `json:"trustedSigners,omitempty"`
 }
 
@@ -1310,8 +1490,8 @@ type StreamingDistributionSummary struct {
 	PriceClass *string `json:"priceClass,omitempty"`
 
 	Status *string `json:"status,omitempty"`
-	// A list of AWS accounts whose public keys CloudFront can use to verify the
-	// signatures of signed URLs and signed cookies.
+	// A list of Amazon Web Services accounts whose public keys CloudFront can use
+	// to verify the signatures of signed URLs and signed cookies.
 	TrustedSigners *TrustedSigners `json:"trustedSigners,omitempty"`
 }
 
@@ -1322,6 +1502,15 @@ type StreamingLoggingConfig struct {
 	Enabled *bool `json:"enabled,omitempty"`
 
 	Prefix *string `json:"prefix,omitempty"`
+}
+
+// +kubebuilder:skipversion
+type TestResult struct {
+	ComputeUtilization *string `json:"computeUtilization,omitempty"`
+
+	FunctionErrorMessage *string `json:"functionErrorMessage,omitempty"`
+
+	FunctionOutput *string `json:"functionOutput,omitempty"`
 }
 
 // +kubebuilder:skipversion

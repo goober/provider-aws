@@ -21,12 +21,14 @@ import (
 	"time"
 
 	svcsdk "github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/pkg/errors"
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -44,6 +46,7 @@ func SetupPublicDNSNamespace(mgr ctrl.Manager, l logging.Logger, rl workqueue.Ra
 			h := commonnamespace.NewHooks(e.kube, e.client)
 			e.preCreate = preCreate
 			e.delete = h.Delete
+			e.preUpdate = preUpdate
 			e.observe = h.Observe
 			e.postCreate = postCreate
 		},
@@ -71,4 +74,23 @@ func preCreate(_ context.Context, cr *svcapitypes.PublicDNSNamespace, obj *svcsd
 func postCreate(_ context.Context, cr *svcapitypes.PublicDNSNamespace, resp *svcsdk.CreatePublicDnsNamespaceOutput, cre managed.ExternalCreation, err error) (managed.ExternalCreation, error) {
 	cr.SetOperationID(resp.OperationId)
 	return cre, err
+}
+
+func preUpdate(_ context.Context, cr *svcapitypes.PublicDNSNamespace, obj *svcsdk.UpdatePublicDnsNamespaceInput) error {
+	if meta.GetExternalName(cr) != "" {
+		obj.Id = awsclient.String(meta.GetExternalName(cr))
+		obj.Namespace = &svcsdk.PublicDnsNamespaceChange{
+			Description: cr.Spec.ForProvider.Description,
+			Properties: &svcsdk.PublicDnsNamespacePropertiesChange{
+				DnsProperties: &svcsdk.PublicDnsPropertiesMutableChange{
+					SOA: &svcsdk.SOAChange{
+						TTL: cr.Spec.ForProvider.Properties.DNSProperties.SOA.TTL,
+					},
+				},
+			},
+		}
+		return nil
+	}
+
+	return errors.New("resource is not ready")
 }
